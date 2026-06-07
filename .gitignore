@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.next/
+__pycache__/
+ai-service/generated/
+uploads/
+*.log
+*.err
+*.out
+.git-backup*/

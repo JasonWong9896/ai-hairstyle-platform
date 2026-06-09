@@ -38,7 +38,11 @@ export class UploadController {
 
     return {
       imageUrl:
-        `http://localhost:8000/uploads/${file.filename}`,
+        `${publicApiUrl()}/uploads/${file.filename}`,
     };
   }
+}
+
+function publicApiUrl() {
+  return (process.env.PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '');
 }

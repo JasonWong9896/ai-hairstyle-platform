@@ -29,7 +29,7 @@ export type AuthInput = {
   role?: AuthRole
 }
 
-const SESSION_DURATION_MS = 15 * 60 * 1000
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000
 
 export async function login(input: AuthInput) {
   const res = await api.post<AuthResponse>('/auth/login', input)

@@ -119,7 +119,7 @@ export function FloatingNavigator() {
     clearAuth(currentRole ?? undefined)
     setLoggedIn(false)
     setOpen(false)
-    router.push('/login')
+    router.push(currentRole === 'stylist' ? '/stylist/login' : currentRole === 'salon' ? '/salon/login' : '/login')
   }
 
   return (

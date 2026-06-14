@@ -119,7 +119,7 @@ export function AppNav({ className = '' }: { className?: string }) {
   const logout = () => {
     clearAuth(currentRole ?? undefined)
     setLoggedIn(false)
-    router.push('/login')
+    router.push(loginHref)
   }
 
   return (

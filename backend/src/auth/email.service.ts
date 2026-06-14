@@ -28,6 +28,9 @@ type SalonBookingEmail = {
 @Injectable()
 export class EmailService {
   private readonly webhookUrl = process.env.EMAIL_DELIVERY_WEBHOOK_URL;
+  private readonly resendApiKey = process.env.RESEND_API_KEY;
+  private readonly resendApiUrl =
+    process.env.RESEND_API_URL ?? 'https://api.resend.com/emails';
   private readonly from =
     process.env.EMAIL_FROM ??
     'AI Hairstyle Platform <jason.wong9896@gmail.com>';
@@ -186,6 +189,19 @@ export class EmailService {
     debug: Record<string, string>;
   }) {
     if (!this.webhookUrl) {
+      if (this.resendApiKey) {
+        await sendResendMail({
+          apiKey: this.resendApiKey,
+          apiUrl: this.resendApiUrl,
+          from: this.from,
+          to: mail.to,
+          subject: mail.subject,
+          text: mail.text,
+          html: mail.html,
+        });
+        return;
+      }
+
       if (this.smtpHost && this.smtpUser && this.smtpPass) {
         await sendSmtpMail({
           host: this.smtpHost,
@@ -236,6 +252,37 @@ type SmtpMail = {
   text: string;
   html: string;
 };
+
+type ResendMail = {
+  apiKey: string;
+  apiUrl: string;
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+};
+
+async function sendResendMail(mail: ResendMail) {
+  const response = await fetch(mail.apiUrl, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${mail.apiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: mail.from,
+      to: [mail.to],
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Resend email failed: ${response.status} ${await response.text()}`);
+  }
+}
 
 async function sendSmtpMail(mail: SmtpMail) {
   if (!mail.secure) {

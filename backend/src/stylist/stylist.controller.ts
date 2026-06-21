@@ -14,7 +14,6 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { uploadDestination, uploadUrl } from '../upload/upload-storage';
 import { StylistService } from './stylist.service';
 
 type StylistBody = {
@@ -50,14 +49,13 @@ export class StylistController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: uploadDestination,
+        destination: './uploads',
         filename: (req, file, callback) => callback(null, `${uuidv4()}${extname(file.originalname)}`),
       }),
     }),
   )
   uploadSalonStylistImage(
     @Headers('host') host: string | undefined,
-    @Headers('x-forwarded-proto') forwardedProto: string | undefined,
     @Headers('authorization') authorization: string | undefined,
     @Param('stylistId') stylistId: string,
     @UploadedFile() file: Express.Multer.File,
@@ -65,7 +63,7 @@ export class StylistController {
     return this.stylistService.addImageForSalon(
       bearerToken(authorization),
       stylistId,
-      uploadUrl(file.filename, { host, forwardedProto }),
+      uploadUrl(file.filename, host),
     );
   }
 
@@ -91,20 +89,19 @@ export class StylistController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: uploadDestination,
+        destination: './uploads',
         filename: (req, file, callback) => callback(null, `${uuidv4()}${extname(file.originalname)}`),
       }),
     }),
   )
   uploadMyImage(
     @Headers('host') host: string | undefined,
-    @Headers('x-forwarded-proto') forwardedProto: string | undefined,
     @Headers('authorization') authorization: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.stylistService.addMyImage(
       bearerToken(authorization),
-      uploadUrl(file.filename, { host, forwardedProto }),
+      uploadUrl(file.filename, host),
     );
   }
 
@@ -118,6 +115,13 @@ export class StylistController {
       body.slots,
     );
   }
+}
+
+function uploadUrl(filename: string, host: string | undefined): string {
+  const publicApiUrl =
+    process.env.PUBLIC_API_URL ?? (host ? `http://${host}` : 'http://localhost:8000');
+
+  return `${publicApiUrl.replace(/\/$/, '')}/uploads/${filename}`;
 }
 
 function bearerToken(authorization: string | undefined): string | undefined {

@@ -13,6 +13,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
+import { uploadDestination, uploadUrl } from './upload-storage';
 
 @Controller('upload')
 export class UploadController {
@@ -22,7 +23,7 @@ export class UploadController {
     FileInterceptor('file', {
       storage: diskStorage({
 
-        destination: './uploads',
+        destination: uploadDestination,
 
         filename: (req, file, callback) => {
 
@@ -37,21 +38,14 @@ export class UploadController {
   uploadFile(
     @Headers('host')
     host: string | undefined,
+    @Headers('x-forwarded-proto')
+    forwardedProto: string | undefined,
     @UploadedFile()
     file: Express.Multer.File,
   ) {
 
-    console.log(file);
-
     return {
-      imageUrl: uploadUrl(file.filename, host),
+      imageUrl: uploadUrl(file.filename, { host, forwardedProto }),
     };
   }
-}
-
-function uploadUrl(filename: string, host: string | undefined): string {
-  const publicApiUrl =
-    process.env.PUBLIC_API_URL ?? (host ? `http://${host}` : 'http://localhost:8000');
-
-  return `${publicApiUrl.replace(/\/$/, '')}/uploads/${filename}`;
 }

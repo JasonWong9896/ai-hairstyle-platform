@@ -4,6 +4,7 @@ import { AppModule } from './app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
+import { ensureUploadsDir } from './upload/upload-storage'
 
 function loadEnvFile() {
   const envPath = join(__dirname, '..', '.env')
@@ -39,7 +40,7 @@ async function bootstrap() {
   app.use(createRateLimiter())
 
   app.useStaticAssets(
-    join(__dirname, '..', 'uploads'),
+    ensureUploadsDir(),
     {
       prefix: '/uploads/',
     },

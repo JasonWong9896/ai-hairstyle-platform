@@ -15,6 +15,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+import { uploadDestination, uploadUrl } from '../upload/upload-storage';
 import { SalonService } from './salon.service';
 
 type SalonBody = {
@@ -71,7 +72,7 @@ export class SalonController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: uploadDestination,
         filename: (req, file, callback) => {
           callback(null, `${uuidv4()}${extname(file.originalname)}`);
         },
@@ -80,13 +81,14 @@ export class SalonController {
   )
   uploadImage(
     @Headers('host') host: string | undefined,
+    @Headers('x-forwarded-proto') forwardedProto: string | undefined,
     @Headers('authorization') authorization: string | undefined,
     @Body('gender') gender: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.salonService.addSpecialtyImage(
       bearerToken(authorization),
-      uploadUrl(file.filename, host),
+      uploadUrl(file.filename, { host, forwardedProto }),
       gender,
     );
   }
@@ -107,7 +109,7 @@ export class SalonController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: uploadDestination,
         filename: (req, file, callback) => {
           callback(null, `${uuidv4()}${extname(file.originalname)}`);
         },
@@ -116,6 +118,7 @@ export class SalonController {
   )
   replaceImage(
     @Headers('host') host: string | undefined,
+    @Headers('x-forwarded-proto') forwardedProto: string | undefined,
     @Headers('authorization') authorization: string | undefined,
     @Body('imageUrl') imageUrl: string | undefined,
     @Body('gender') gender: string | undefined,
@@ -124,7 +127,7 @@ export class SalonController {
     return this.salonService.replaceSpecialtyImage(
       bearerToken(authorization),
       imageUrl,
-      uploadUrl(file.filename, host),
+      uploadUrl(file.filename, { host, forwardedProto }),
       gender,
     );
   }
@@ -148,7 +151,7 @@ export class SalonController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: uploadDestination,
         filename: (req, file, callback) => {
           callback(null, `${uuidv4()}${extname(file.originalname)}`);
         },
@@ -157,12 +160,13 @@ export class SalonController {
   )
   uploadIntroImage(
     @Headers('host') host: string | undefined,
+    @Headers('x-forwarded-proto') forwardedProto: string | undefined,
     @Headers('authorization') authorization: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.salonService.addIntroImage(
       bearerToken(authorization),
-      uploadUrl(file.filename, host),
+      uploadUrl(file.filename, { host, forwardedProto }),
     );
   }
 
@@ -181,7 +185,7 @@ export class SalonController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: uploadDestination,
         filename: (req, file, callback) => {
           callback(null, `${uuidv4()}${extname(file.originalname)}`);
         },
@@ -190,6 +194,7 @@ export class SalonController {
   )
   replaceIntroImage(
     @Headers('host') host: string | undefined,
+    @Headers('x-forwarded-proto') forwardedProto: string | undefined,
     @Headers('authorization') authorization: string | undefined,
     @Body('imageUrl') imageUrl: string | undefined,
     @UploadedFile() file: Express.Multer.File,
@@ -197,16 +202,9 @@ export class SalonController {
     return this.salonService.replaceIntroImage(
       bearerToken(authorization),
       imageUrl,
-      uploadUrl(file.filename, host),
+      uploadUrl(file.filename, { host, forwardedProto }),
     );
   }
-}
-
-function uploadUrl(filename: string, host: string | undefined): string {
-  const publicApiUrl =
-    process.env.PUBLIC_API_URL ?? (host ? `http://${host}` : 'http://localhost:8000');
-
-  return `${publicApiUrl.replace(/\/$/, '')}/uploads/${filename}`;
 }
 
 function bearerToken(authorization: string | undefined): string | undefined {

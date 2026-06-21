@@ -13,7 +13,11 @@ export function uploadDestination(
   _file: unknown,
   callback: (error: Error | null, destination: string) => void,
 ) {
-  callback(null, ensureUploadsDir());
+  try {
+    callback(null, ensureUploadsDir());
+  } catch (error) {
+    callback(error instanceof Error ? error : new Error('Failed to prepare upload directory'), uploadsDir);
+  }
 }
 
 export function uploadUrl(filename: string, headers: { host?: string; forwardedProto?: string }) {

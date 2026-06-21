@@ -8,6 +8,7 @@ import { ChevronLeft, ExternalLink, ImagePlus, LoaderCircle, LockKeyhole, Pencil
 import { AppNav } from '@/components/AppNav'
 import { copy } from '@/lib/i18n'
 import { useLanguage } from '@/lib/useLanguage'
+import { isUnauthorizedError } from '@/services/api'
 import { changeEmail, changePassword, getStoredAuthUser, isAuthSessionActive } from '@/services/auth'
 import {
   deleteSalonIntroImage,
@@ -50,8 +51,13 @@ export default function SalonBasicInfoPage() {
         setHomepageUrl(salonData.homepageUrl ?? '')
         setNewEmail(getStoredAuthUser('salon')?.email ?? '')
       })
-      .catch(() => {
-        router.replace('/salon/login')
+      .catch((err) => {
+        if (isUnauthorizedError(err)) {
+          router.replace('/salon/login')
+          return
+        }
+
+        setError(labels.error)
       })
       .finally(() => setLoading(false))
   }, [router])

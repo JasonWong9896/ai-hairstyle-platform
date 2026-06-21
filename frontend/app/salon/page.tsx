@@ -10,7 +10,6 @@ import { AvailabilityWeekEditor } from '@/components/AvailabilityWeekEditor'
 import { copy } from '@/lib/i18n'
 import type { HairstyleGender } from '@/lib/hairstyleCatalog'
 import { useLanguage } from '@/lib/useLanguage'
-import { isUnauthorizedError } from '@/services/api'
 import { isAuthSessionActive } from '@/services/auth'
 import {
   completeManagedSalonBooking,
@@ -73,13 +72,8 @@ export default function SalonPage() {
         setStylists(stylistData)
         setBookings(bookingData)
       })
-      .catch((err) => {
-        if (isUnauthorizedError(err)) {
-          router.replace('/salon/login')
-          return
-        }
-
-        setError(labels.error)
+      .catch(() => {
+        router.replace('/salon/login')
       })
       .finally(() => setLoading(false))
   }, [router])
